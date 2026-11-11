@@ -23,7 +23,7 @@ export default function Gali({ city, houses, onBuild }: Props) {
   const [night, setNight] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const slots = Math.max(5, houses.length + 2);
-  const width = 80 + slots * SLOT + 60;
+  const width = 80 + slots * SLOT + 240;
 
   const svg = useMemo(() => {
     const p: string[] = [];
@@ -53,7 +53,7 @@ export default function Gali({ city, houses, onBuild }: Props) {
     p.push(`<g transform="translate(${cx} ${GROUND - 96}) scale(.52)"><g class="gali-chiku">${chikuSVG({ mood: night ? "sleepy" : "joy", wing: "wave" })}</g></g>`);
     // city board
     p.push(
-      `<g transform="translate(${width - 150} ${GROUND - 76})"><rect x="-4" y="0" width="8" height="76" fill="#5B6478"/>` +
+      `<g transform="translate(${width - 120} ${GROUND - 76})"><rect x="-4" y="0" width="8" height="76" fill="#5B6478"/>` +
         `<rect x="-66" y="-30" width="132" height="40" rx="6" fill="#2F7D4F"/><rect x="-62" y="-26" width="124" height="32" rx="4" fill="none" stroke="#fff" stroke-width="2"/>` +
         `<text x="0" y="-4" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="16" fill="#fff">${esc(city.slice(0, 14))}</text></g>`,
     );

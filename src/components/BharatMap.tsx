@@ -67,6 +67,15 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
   const anim = useRef<number | null>(null);
   const drag = useRef<{ px: number; py: number; vb: VB; moved: boolean; id: number } | null>(null);
   const reduce = useRef(false);
+  const [pxW, setPxW] = useState(600);
+
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setPxW(Math.min(e.contentRect.width, e.contentRect.height || e.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     reduce.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -127,8 +136,9 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
       e.preventDefault();
       const r = el.getBoundingClientRect();
       setVb((v) => {
-        const px = v.x + ((e.clientX - r.left) / r.width) * v.w;
-        const py = v.y + ((e.clientY - r.top) / r.height) * ((v.w * MAP_H) / MAP_W);
+        const side = Math.min(r.width, r.height);
+        const px = v.x + ((e.clientX - r.left - (r.width - side) / 2) / side) * v.w;
+        const py = v.y + ((e.clientY - r.top - (r.height - side) / 2) / side) * v.w;
         const w = v.w * (e.deltaY > 0 ? 1.12 : 0.89);
         return clamp({ w, x: px - ((px - v.x) * w) / v.w, y: py - ((py - v.y) * w) / v.w });
       });
@@ -151,7 +161,8 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
       d.moved = true;
       el.setPointerCapture(e.pointerId);
     }
-    const k = d.vb.w / el.getBoundingClientRect().width;
+    const rb = el.getBoundingClientRect();
+    const k = d.vb.w / Math.min(rb.width, rb.height);
     setVb(clamp({ w: d.vb.w, x: d.vb.x - dx * k, y: d.vb.y - dy * k }));
   };
   const onPointerUp = () => {
@@ -159,10 +170,29 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
   };
 
   const zoomed = vb.w < 620;
-  const s = vb.w / MAP_W; // keep pins a constant screen size
+  const u = vb.w / Math.max(200, pxW); // map units per screen pixel
   const sel = selected ? findCity(selected) : null;
   const results = useMemo(() => searchCities(query), [query]);
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+  const ck = Math.min(1.6, Math.max(0.6, u * 0.75));
+
+  // labels: priority order, skip any that would overlap one already placed
+  const labels = useMemo(() => {
+    const boxes: [number, number, number, number][] = [];
+    const out = new Set<string>();
+    const pri = (name: string) => (name === selected ? 0 : name === mine ? 1 : counts[name] ? 2 : 3);
+    const list = CITIES.filter((c) => zoomed || pri(c.name) < 3).sort((a, b) => pri(a.name) - pri(b.name));
+    for (const c of list) {
+      const n = (counts[c.name] ?? 0) + (mine === c.name ? 1 : 0);
+      const w = (c.name.length * 7.4 + (n ? 30 : 12)) * u;
+      const b: [number, number, number, number] = [c.x + 7 * u, c.y - 12 * u, c.x + 9 * u + w, c.y + 11 * u];
+      if (boxes.some((o) => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1])) continue;
+      boxes.push(b);
+      out.add(c.name);
+    }
+    return out;
+  }, [zoomed, selected, mine, counts, u]);
 
   const rivers = useMemo(() => Object.entries(RIVERS).map(([k, pts]) => ({ k, d: smoothPath(pts as [number, number][]) })), []);
   const nagpur = findCity("Nagpur")!;
@@ -244,19 +274,20 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
           </pattern>
           <radialGradient id="seaG" cx="50%" cy="45%" r="75%">
             <stop offset="0" stopColor="#A8DCE8" />
-            <stop offset="1" stopColor="#7FC2D6" />
+            <stop offset="1" stopColor="#86C6D9" />
           </radialGradient>
           <linearGradient id="landG" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#F7E7C4" />
             <stop offset="1" stopColor="#F1D9A8" />
           </linearGradient>
         </defs>
+        <rect x="-1500" y="-1500" width={MAP_W + 3000} height={MAP_H + 3000} fill="#86C6D9" />
         <rect x="-50" y="-50" width={MAP_W + 100} height={MAP_H + 100} fill="url(#seaG)" />
-        <rect x="-50" y="-50" width={MAP_W + 100} height={MAP_H + 100} fill="url(#waves)" opacity=".7" />
+        <rect x="-1500" y="-1500" width={MAP_W + 3000} height={MAP_H + 3000} fill="url(#waves)" opacity=".7" />
         <g className="sea-labels" fontFamily="'Baloo 2', sans-serif" fontWeight="700" fill="#4E8FA6" opacity=".75">
           <text x="130" y="700" fontSize="26">Arab Sagar</text>
-          <text x="640" y="760" fontSize="24">Bangal ki Khadi</text>
-          <text x="330" y="960" fontSize="28">Hind Mahasagar</text>
+          <text x="575" y="690" fontSize="24">Bangal ki Khadi</text>
+          <text x="560" y="900" fontSize="28">Hind Mahasagar</text>
         </g>
         {/* paper-cut land with offset shadow */}
         <path d={LAND_PATH} fill="#C99A5B" opacity=".45" transform="translate(5 8)" />
@@ -277,8 +308,9 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
           ))}
           {TREES.map(([x, y], i) => (
             <g key={`t${i}`} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}>
-              <rect x="-1.5" y="0" width="3" height="7" fill="#7A4A2C" />
-              <circle cx="0" cy="-3" r="7" fill={i % 2 ? palette.leaf : palette.leafDark} />
+              <circle cx="-6" cy="0" r="5.5" fill={palette.leafDark} />
+              <circle cx="5" cy="0.5" r="5" fill={palette.leafDark} />
+              <circle cx="0" cy="-4" r="6.5" fill={i % 2 ? palette.leaf : "#5DB07C"} />
             </g>
           ))}
           {rivers.map((r) => (
@@ -290,7 +322,7 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
         {BUILT.map((l) => {
           const c = findCity(l.city);
           if (!c) return null;
-          const k = Math.max(0.55, s * 1.1);
+          const k = Math.min(1.6, Math.max(0.55, u * 0.75));
           return (
             <g key={l.id} transform={`translate(${c.x + (l.dx ?? 0) - 30 * k} ${c.y + (l.dy ?? 0) - 56 * k}) scale(${k})`} aria-hidden="true">
               <g dangerouslySetInnerHTML={{ __html: landmarkSVG(l.kind) }} />
@@ -299,7 +331,7 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
         })}
 
         {/* Chiku at Zero Mile */}
-        <g transform={`translate(${nagpur.x + 18 * Math.max(0.6, s)} ${nagpur.y - 52 * Math.max(0.6, s)}) scale(${0.3 * Math.max(0.6, s)})`} aria-hidden="true">
+        <g transform={`translate(${nagpur.x + 16 * ck} ${nagpur.y - 50 * ck}) scale(${0.3 * ck})`} aria-hidden="true">
           <g className="map-chiku" dangerouslySetInnerHTML={{ __html: chikuSVG({ mood: "happy", wing: "wave" }) }} />
         </g>
 
@@ -308,8 +340,8 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
           const n = counts[c.name] ?? 0;
           const isSel = selected === c.name;
           const isMine = mine === c.name;
-          const showLabel = zoomed || n > 0 || isSel || isMine || hover === c.name;
-          const r = (n > 0 || isMine ? 7 : 4) * Math.max(0.55, s);
+          const showLabel = labels.has(c.name) || hover === c.name;
+          const r = (n > 0 || isMine ? 6 : 3.2) * u;
           return (
             <g
               key={c.name}
@@ -331,11 +363,11 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
                 }
               }}
             >
-              <circle r={r * 2.6} fill="transparent" />
+              <circle r={Math.max(r * 2.6, 13 * u)} fill="transparent" />
               {(isSel || isMine) && <circle r={r * 2.2} fill={palette.marigold} opacity=".25" className="pulse" />}
-              <circle r={r} fill={isMine ? palette.roof : n > 0 ? palette.marigold : "#C49A62"} stroke="#FFF6E9" strokeWidth={1.6 * Math.max(0.55, s)} />
+              <circle r={r} fill={isMine ? palette.roof : n > 0 ? palette.marigold : "#C49A62"} stroke="#FFF6E9" strokeWidth={1.4 * u} />
               {showLabel && (
-                <g transform={`scale(${Math.max(0.55, s)})`} pointerEvents="none">
+                <g transform={`scale(${u})`} pointerEvents="none">
                   <rect x="9" y="-11" width={c.name.length * 7.4 + (n || isMine ? 30 : 12)} height="21" rx="10.5" fill={isSel ? palette.ink : "rgba(31,42,68,.82)"} />
                   <text x="15" y="4" fill="#FFF6E9" fontSize="12.5" fontWeight="700" fontFamily="'Baloo 2', sans-serif">
                     {c.name}
@@ -372,7 +404,7 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
           </button>
         </div>
       )}
-      <p className="map-hint">Pin dabao · zoom ke baad khinch ke ghoomo · + / − se zoom</p>
+      <p className="map-hint" aria-hidden="true">Pin dabao · zoom ke baad khinch ke ghoomo · + / − se zoom</p>
     </div>
   );
 }

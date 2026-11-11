@@ -21,7 +21,7 @@ export default function Experience() {
   const [mine] = useMyHouse();
   const [vote, setVote] = useVote();
   const [selected, setSelected] = useState<string | null>(null);
-  const [galiCity, setGaliCity] = useState("Nagpur");
+  const [galiPick, setGaliCity] = useState<string | null>(null);
   const [preset, setPreset] = useState<{ city: string; n: number } | null>(null);
   const [menu, setMenu] = useState(false);
 
@@ -30,6 +30,8 @@ export default function Experience() {
     for (const h of PUBLIC_HOUSES) c[h.city] = (c[h.city] ?? 0) + 1;
     return c;
   }, []);
+
+  const galiCity = galiPick ?? mine?.city ?? "Nagpur";
 
   const galiHouses: GaliHouse[] = useMemo(() => {
     const list: GaliHouse[] = PUBLIC_HOUSES.filter((h) => h.city === galiCity);
@@ -170,7 +172,7 @@ export default function Experience() {
                   <svg viewBox="0 0 60 60" width="48" height="48" aria-hidden="true" dangerouslySetInnerHTML={{ __html: landmarkSVG(w.kind) }} />
                   <span>
                     <strong>{w.name}</strong>
-                    <small>{w.city}</small>
+                    <small>{w.area ?? w.city}</small>
                   </span>
                 </button>
               </li>
