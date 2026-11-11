@@ -1,0 +1,45 @@
+# Copy of the workflow that lives in the deployment mirror
+# (AradhyaDixit18/bharat-basao/.github/workflows/sync-from-velto.yml).
+# It copies the latest velto-studios/bharat-basao main branch into the mirror with a normal commit
+# (no force-push), and Vercel deploys the mirror on every push.
+# This file is stored outside .github/ on purpose so it never runs in the Velto repository.
+name: Sync from velto-studios/bharat-basao
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-velto
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the mirror
+        uses: actions/checkout@v4
+
+      - name: Fetch the Velto source of truth
+        run: git clone --depth 1 https://github.com/velto-studios/bharat-basao.git "$RUNNER_TEMP/velto"
+
+      - name: Copy files (keep this workflow, drop nothing else by surprise)
+        run: |
+          rsync -a --delete --exclude ".git/" --exclude ".github/" "$RUNNER_TEMP/velto/" ./
+          echo "SRC_SHA=$(git -C "$RUNNER_TEMP/velto" rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
+      - name: Commit and push if anything changed
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Mirror already matches velto-studios/bharat-basao@${SRC_SHA}"
+            exit 0
+          fi
+          git config user.name "bharat-basao-sync"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sync from velto-studios/bharat-basao@${SRC_SHA}"
+          git push
