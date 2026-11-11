@@ -147,8 +147,9 @@ export function chikuSVG(o: ChikuOpts = {}): string {
     `<path d="M54 122 L16 100 L24 116 L12 126 L22 132 L56 140 Z" fill="#6B4226"/>` +
     `<path d="M90 170 L88 186 M84 186 L94 186 M110 170 L112 186 M106 186 L117 186" stroke="#D9895E" stroke-width="4" stroke-linecap="round"/>` +
     `<ellipse cx="100" cy="130" rx="56" ry="48" fill="${palette.sparrow}"/>` +
+    (wing === "rest" ? `<g class="ck-wing ck-wing-rest">${wings.rest}</g>` : "") +
     `<ellipse cx="110" cy="142" rx="38" ry="31" fill="${palette.belly}"/>` +
-    (wing !== "up" ? `<g class="ck-wing ck-wing-${wing}">${wings[wing]}</g>` : "") +
+    (wing === "wave" ? `<g class="ck-wing ck-wing-wave">${wings.wave}</g>` : "") +
     `<g class="ck-head">` +
     `<circle cx="116" cy="80" r="41" fill="${palette.sparrow}"/>` +
     `<path d="M150 70 C160 78 158 96 150 104" stroke="#6B4226" stroke-width="6" fill="none" stroke-linecap="round" opacity=".55"/>` +

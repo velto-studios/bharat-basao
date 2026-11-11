@@ -101,7 +101,8 @@ export function landmarkSVG(kind: LandmarkKind): string {
 export interface Landmark {
   id: string;
   name: string;
-  city: string; // must match a city in CITIES
+  city: string; // must match a city in CITIES (map anchor)
+  area?: string; // shown instead of the anchor city when the place is elsewhere
   kind: LandmarkKind;
   dx?: number; // offset from the city point, map units
   dy?: number;
@@ -125,7 +126,7 @@ export const WISHLIST: Landmark[] = [
   { id: "dhakeshwari", name: "Dhakeshwari Mandir", city: "Dhaka", kind: "mandir" },
   { id: "shwedagon", name: "Shwedagon Pagoda", city: "Yangon", kind: "stupa" },
   { id: "dalada", name: "Dalada Maligawa", city: "Kandy", kind: "stupa" },
-  { id: "katas-raj", name: "Katas Raj", city: "Islamabad", kind: "mandir", dx: 10, dy: 22 },
-  { id: "chittorgarh", name: "Chittorgarh Kila", city: "Udaipur", kind: "kila", dx: 14, dy: -6 },
+  { id: "katas-raj", name: "Katas Raj", city: "Islamabad", area: "Chakwal, Punjab", kind: "mandir", dx: 10, dy: 22 },
+  { id: "chittorgarh", name: "Chittorgarh Kila", city: "Udaipur", area: "Chittorgarh", kind: "kila", dx: 14, dy: -6 },
   { id: "eden", name: "Eden Gardens", city: "Kolkata", kind: "maidan", dx: -14 },
 ];
