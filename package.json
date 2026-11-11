@@ -1,0 +1,35 @@
+{
+  "name": "bharat-basao",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bharat Basao: an illustrated Akhand Bharat map that followers settle together. A Velto Studios project.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "map": "node scripts/build-map.cjs",
+    "verify": "npm run typecheck && npm run lint && npm run build"
+  },
+  "dependencies": {
+    "@fontsource/baloo-2": "5.3.0",
+    "@fontsource/mukta": "5.3.0",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "d3-geo": "^3.1.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "topojson-client": "^3.1.0",
+    "topojson-simplify": "^3.0.3",
+    "typescript": "^5",
+    "world-atlas": "^2.0.2"
+  },
+  "engines": { "node": ">=20" }
+}
