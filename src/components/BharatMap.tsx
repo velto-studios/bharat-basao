@@ -122,7 +122,7 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
   const focusCity = useCallback(
     (c: City) => {
       onSelect(c.name);
-      animateTo({ w: 360, x: c.x - 180, y: c.y - 200 });
+      animateTo({ w: 360, x: c.x - 180, y: c.y - 110 }); // city sits in the upper third, clear of the city card
     },
     [animateTo, onSelect],
   );
@@ -282,7 +282,6 @@ export default function BharatMap({ counts, selected, mine, onSelect, onOpenGali
           </linearGradient>
         </defs>
         <rect x="-1500" y="-1500" width={MAP_W + 3000} height={MAP_H + 3000} fill="#86C6D9" />
-        <rect x="-50" y="-50" width={MAP_W + 100} height={MAP_H + 100} fill="url(#seaG)" />
         <rect x="-1500" y="-1500" width={MAP_W + 3000} height={MAP_H + 3000} fill="url(#waves)" opacity=".7" />
         <g className="sea-labels" fontFamily="'Baloo 2', sans-serif" fontWeight="700" fill="#4E8FA6" opacity=".75">
           <text x="130" y="700" fontSize="26">Arab Sagar</text>
